@@ -13,4 +13,4 @@ conda activate peft
 
 #nohup ./train.sh > ./res/finetune-mlp-ina-cb_loss.out 2>&1 &
 
-nohup ./train.sh > ./res/finetune-last-mlp-ina-cb_loss.out 2>&1 &
+nohup ./train.sh > ./res/finetune.out 2>&1 &

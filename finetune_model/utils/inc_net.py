@@ -6,11 +6,11 @@ import timm
 def get_backbone(args, pretrained=False):
     name = args["backbone_type"].lower()
     # SimpleCIL or SimpleCIL w/ Finetune
-    if name == "pretrained_vit_b16_224" or name == "vit_base_patch16_224":
+    if name == "pretrained_vit_b16_224_in21k" or name == "vit_base_patch16_224":
         model = timm.create_model("vit_base_patch16_224",pretrained=True, num_classes=0)
         model.out_dim = 768
         return model.eval()
-    elif name == "pretrained_vit_b16_224_in21k" or name == "vit_base_patch16_224_in21k":
+    elif name == "pretrained_vit_b16_224_in21k_in21k" or name == "vit_base_patch16_224_in21k":
         model = timm.create_model("vit_base_patch16_224_in21k",pretrained=True, num_classes=0)
         model.out_dim = 768
         return model.eval()
@@ -111,7 +111,7 @@ class SimpleVitNet(BaseNet):
 class VITNet(BaseNet):
     def __init__(self, args, pretrained):
         super().__init__(args, pretrained)
-        self.frozen_params(self.backbone)
+        # self.frozen_params(self.backbone)
 
 
     def update_fc(self, nb_classes):

@@ -47,7 +47,10 @@ class Learner(BaseLearner):
             data_index = (label_list == class_index).nonzero().squeeze(-1)
             embedding = embedding_list[data_index]
             proto = embedding.mean(0)
-            self._network.fc.weight.data[class_index] = proto
+            if isinstance(self._network, nn.DataParallel):
+                self._network.module.fc.weight.data[class_index] = proto
+            else:
+                self._network.fc.weight.data[class_index] = proto
         return model
 
     def train(self, data_manager):
@@ -86,7 +89,7 @@ class Learner(BaseLearner):
             optimizer = optim.AdamW(self._network.parameters(), lr=self.init_lr, weight_decay=self.weight_decay)
         scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=self.args['tuned_epoch'],
                                                          eta_min=self.min_lr)
-        self._init_train(train_loader, optimizer, scheduler)
+        # self._init_train(train_loader, optimizer, scheduler)
         self.replace_fc(train_loader_for_protonet, self._network, None)
 
     def _init_train(self, train_loader, optimizer, scheduler):
@@ -99,9 +102,9 @@ class Learner(BaseLearner):
             for i, (_, inputs, targets) in enumerate(train_loader):
                 inputs, targets = inputs.to(self._device), targets.to(self._device)
                 logits = self._network(inputs)["logits"]
-                # loss = F.cross_entropy(logits, targets)
-                criterion = source_import(self.args['loss_type']).create_loss()
-                loss = criterion(logits, targets, self.data_manager.train_dataset_num)
+                loss = F.cross_entropy(logits, targets)
+                # criterion = source_import(self.args['loss_type']).create_loss()
+                # loss = criterion(logits, targets, self.data_manager.train_dataset_num)
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()

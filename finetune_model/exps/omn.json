@@ -1,6 +1,6 @@
 {
     "prefix": " ",
-    "dataset": "imagenetr",
+    "dataset": "omnibenchmark",
     "shuffle": true,
     "model_name": "vit",
     "backbone_type": "pretrained_vit_b16_224_in21k",
