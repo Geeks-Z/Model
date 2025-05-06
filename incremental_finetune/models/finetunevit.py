@@ -55,7 +55,7 @@ class Learner(BaseLearner):
         return model
 
     def train(self, data_manager):
-        self._total_classes = 40 #data_manager.nb_classes
+        self._total_classes = data_manager.nb_classes
         self._network = self._network.to(self._device)
         self._network = CustomDistributedDataParallel(self._network, device_ids=[self.args["local_rank"]],
                                                       output_device=self.args["local_rank"])
@@ -68,9 +68,8 @@ class Learner(BaseLearner):
         self.train_loader = DataLoader(self.train_dataset, batch_size=self.batch_size,
                                        num_workers=num_workers, sampler=train_sampler)
         test_dataset = data_manager.get_dataset(np.arange(0, self._total_classes), source="test", mode="test")
-        test_sampler = DS(test_dataset)
         self.test_loader = DataLoader(test_dataset, batch_size=self.batch_size, num_workers=num_workers,
-                                      sampler=test_sampler)
+                                      shuffle=False)
 
         train_dataset_for_protonet = data_manager.get_dataset(np.arange(0, self._total_classes),
                                                               source="train", mode="test")
@@ -78,12 +77,7 @@ class Learner(BaseLearner):
         self.train_loader_for_protonet = DataLoader(train_dataset_for_protonet, batch_size=self.batch_size,
                                                     num_workers=num_workers, sampler=train_for_protonet_sampler)
 
-        # if len(self._multiple_gpus) > 1:
-        #     print('Multiple GPUs')
-        #     self._network = nn.DataParallel(self._network, self._multiple_gpus)
         self._train(self.train_loader, self.train_loader_for_protonet)
-        # if len(self._multiple_gpus) > 1:
-        #     self._network = self._network.module
 
     def _train(self, train_loader, train_loader_for_protonet):
         self._network.to(self._device)
@@ -99,7 +93,6 @@ class Learner(BaseLearner):
 
     def _init_train(self, train_loader, optimizer, scheduler):
         prog_bar = tqdm(range(self.args['tuned_epoch']))
-        # start_time = time.time()
         for _, epoch in enumerate(prog_bar):
             self._network.train()
             losses = 0.0
@@ -109,8 +102,6 @@ class Learner(BaseLearner):
                                                                                          non_blocking=True)
                 logits = self._network(inputs)["logits"]
                 loss = F.cross_entropy(logits, targets)
-                # criterion = source_import(self.args['loss_type']).create_loss()
-                # loss = criterion(logits, targets, self.data_manager.train_dataset_num)
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()

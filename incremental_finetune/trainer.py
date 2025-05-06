@@ -66,12 +66,13 @@ def _train(args):
     )
     start_time = time.time()
     model.train(data_manager)
-    total_time = time.time() - start_time
-    print(round(total_time, 2))
     # torch.save(model._network.backbone.state_dict(), '/home/team/zhaohongwei/checkpoint/state_dict' + str(args["dataset"]) +'.pth')
     cnn_accy, nme_accy = model.eval_accuracy()
     print('Top1 Average Accuracy :', cnn_accy["top1"])
     print('Top5 Average Accuracy :', cnn_accy["top5"])
+    total_time = time.time() - start_time
+    print(round(total_time, 2))
+    model.after_task()
 
 def _set_device(args):
     device_type = args["device"]
